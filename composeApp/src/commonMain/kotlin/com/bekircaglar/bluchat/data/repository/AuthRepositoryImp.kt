@@ -63,7 +63,7 @@ class AuthRepositoryImp(
 
     }
 
-    override suspend fun signInWithGoogle(idToken :String): Flow<QueryState<AuthResult>> = flow {
+    override suspend fun signInWithGoogle(idToken: String): Flow<QueryState<AuthResult>> = flow {
         emit(QueryState.Loading)
         kotlin.runCatching {
             val credential = dev.gitlive.firebase.auth.GoogleAuthProvider.credential(
@@ -81,30 +81,32 @@ class AuthRepositoryImp(
     }
 
     override suspend fun checkPhoneNumber(phoneNumber: String): Flow<QueryState<Boolean>> = flow {
-            emit(QueryState.Loading)
-            kotlin.runCatching {
-                databaseReference.child(USERS).valueEvents.collect {
-                    val phoneExists = it.children.any { userSnapshot ->
-                        val user = userSnapshot.value<Users>()
-                        user.phoneNumber.toString() == phoneNumber
-                    }
-                    if (phoneExists) {
-                        emit(QueryState.Success(true))
-                    } else {
-                        emit(QueryState.Success(false))
-                    }
+        emit(QueryState.Loading)
+        kotlin.runCatching {
+            databaseReference.child(USERS).orderByValue().equalTo(phoneNumber).valueEvents.collect {
+                val userExists = it.children.any { userSnapshot ->
+                    val user = userSnapshot.value<Users>()
+                    user.phoneNumber.toString() == phoneNumber
                 }
-            }.onFailure {
-                emit(QueryState.Error(it.message))
+                if (userExists) {
+                    emit(QueryState.Success(true))
+                } else {
+                    emit(QueryState.Success(false))
+                }
             }
+
+        }.onFailure {
+            emit(QueryState.Error(it.message))
         }
+    }
 
     override suspend fun createUser(users: Users): Flow<QueryState<Unit>> = flow {
         emit(QueryState.Loading)
         kotlin.runCatching {
             val currentUserUid = auth.currentUser?.uid
             if (currentUserUid != null) {
-                databaseReference.child(USERS).child(currentUserUid).setValue(users.copy(uid = currentUserUid))
+                databaseReference.child(USERS).child(currentUserUid)
+                    .setValue(users.copy(uid = currentUserUid))
             } else {
                 emit(QueryState.Error("User not found"))
             }
@@ -115,7 +117,7 @@ class AuthRepositoryImp(
         }
     }
 
-    override suspend fun deleteUser(): Flow<QueryState<Unit>> = flow{
+    override suspend fun deleteUser(): Flow<QueryState<Unit>> = flow {
         emit(QueryState.Loading)
         kotlin.runCatching {
             auth.currentUser?.delete()

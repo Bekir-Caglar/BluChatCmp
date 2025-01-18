@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import coil3.Image
 import com.bekircaglar.bluchat.domain.model.NotificationData
 import com.bekircaglar.bluchat.ui.theme.AppTheme
 import com.bekircaglar.bluchat.ui.theme.ErrorBorder
@@ -33,6 +34,7 @@ import com.bekircaglar.bluchat.ui.theme.SuccessBorder
 import com.bekircaglar.bluchat.ui.theme.WarningBorder
 import com.bekircaglar.bluchat.utils.NotificationType
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.vectorResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable

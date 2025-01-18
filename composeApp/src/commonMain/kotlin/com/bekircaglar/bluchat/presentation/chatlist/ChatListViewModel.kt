@@ -9,10 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class ChatListViewModel(private val authUseCase: AuthUseCase):ViewModel()  {
-    private val _uiState = MutableStateFlow<QueryState<String>>(QueryState.Idle)
+    private val _uiState = MutableStateFlow<QueryState<Unit>>(QueryState.Idle)
     val uiState = _uiState
 
-    init {
+
+    fun setLoadState(){
         _uiState.value = QueryState.Loading
     }
 

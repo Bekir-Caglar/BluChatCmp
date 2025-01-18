@@ -88,6 +88,7 @@ class SignUpViewModel(
             surname = surname,
             email = email,
             phoneNumber = phoneNumber,
+            profileImageUrl = "https://picsum.photos/200/300"
         )
         authUseCase.crateUser(user = user).collect { createUserResult ->
             if (createUserResult.isSuccess) {

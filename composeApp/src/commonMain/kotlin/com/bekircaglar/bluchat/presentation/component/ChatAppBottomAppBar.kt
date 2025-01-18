@@ -48,8 +48,9 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
             items.forEach { item ->
                 val isSelected = currentRoute == item.route
                 val iconColor by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.6f
+                    ),
                     animationSpec = tween(durationMillis = 300),
                     label = ""
                 )
@@ -99,7 +100,7 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
                                 when (it) {
                                     true -> {
                                         Icon(
-                                            imageVector = Icons.Default.Person,
+                                            painter = painterResource(resource = item.selectedIcon!!),
                                             contentDescription = item.label,
                                             tint = iconColor
                                         )
@@ -107,7 +108,7 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
 
                                     false -> {
                                         Icon(
-                                            imageVector = Icons.Default.Person,
+                                            painter = painterResource(resource = item.unSelectedIcon!!),
                                             contentDescription = item.label,
                                             tint = iconColor
                                         )

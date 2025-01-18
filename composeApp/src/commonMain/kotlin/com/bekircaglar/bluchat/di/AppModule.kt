@@ -1,17 +1,23 @@
 package com.bekircaglar.bluchat.di
 
 import com.bekircaglar.bluchat.data.repository.AuthRepositoryImp
+import com.bekircaglar.bluchat.data.repository.ProfileRepositoryImp
 import com.bekircaglar.bluchat.domain.repository.AuthRepository
+import com.bekircaglar.bluchat.domain.repository.ProfileRepository
 import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CheckIsUserAlreadyExistUseCase
+import com.bekircaglar.bluchat.domain.usecase.profile.GetCurrentUserUseCase
+import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.bekircaglar.bluchat.presentation.auth.signin.SignInViewModel
 import com.bekircaglar.bluchat.presentation.auth.signup.SignUpViewModel
 import com.bekircaglar.bluchat.presentation.chatlist.ChatListViewModel
+import com.bekircaglar.bluchat.presentation.profile.ProfileViewModel
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.database.database
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -26,5 +32,9 @@ class AppModule {
         factoryOf(::AuthUseCase) { bind<AuthUseCase>() }
         viewModelOf(::SignUpViewModel)
         viewModelOf(::ChatListViewModel)
+        factoryOf(::ProfileRepositoryImp) { bind<ProfileRepository>() }
+        factoryOf(::GetCurrentUserUseCase) { bind<GetCurrentUserUseCase>() }
+        factoryOf(::UploadImageUseCase) { bind<UploadImageUseCase>() }
+        viewModelOf(::ProfileViewModel)
     }
 }

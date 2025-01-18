@@ -36,7 +36,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bluchatkmp.composeapp.generated.resources.Res
-import bluchatkmp.composeapp.generated.resources.drawable
 import bluchatkmp.composeapp.generated.resources.ic_invisible
 import bluchatkmp.composeapp.generated.resources.ic_visible
 import org.jetbrains.compose.resources.painterResource

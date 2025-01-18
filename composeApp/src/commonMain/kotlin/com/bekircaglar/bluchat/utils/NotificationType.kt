@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import bluchatkmp.composeapp.generated.resources.Res
 import bluchatkmp.composeapp.generated.resources.ic_attention
 import bluchatkmp.composeapp.generated.resources.ic_close_circle
+import bluchatkmp.composeapp.generated.resources.ic_filled_chat
 import bluchatkmp.composeapp.generated.resources.ic_info_circle
 import bluchatkmp.composeapp.generated.resources.ic_notification
 import bluchatkmp.composeapp.generated.resources.ic_tick_circle
