@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "639006118135",
+    "firebase_url": "https://bluchat-446712-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "bluchat-446712",
+    "storage_bucket": "bluchat-446712.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:639006118135:android:7c237830c5c8590d40c3f2",
+        "android_client_info": {
+          "package_name": "com.bekircaglar.bluchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "639006118135-ppvi06t01hkfifgs7dafh11g2aaot9ec.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bekircaglar.bluchat",
+            "certificate_hash": "e1bec3540d506057ba6844c988d00f5078315ff0"
+          }
+        },
+        {
+          "client_id": "639006118135-akudk82fulrvbl47um2dsoi815corrsu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAw35fkwijgwPkBa_oDCMyxsVD2T-d_uo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "639006118135-akudk82fulrvbl47um2dsoi815corrsu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "639006118135-1hkjemm5e7d81dmqro7q2gc8ehcs1ohe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.bekircaglar.bluchat.BluChatKmp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

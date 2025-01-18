@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,6 +36,7 @@ import androidx.navigation.NavController
 import bluchatkmp.composeapp.generated.resources.Res
 import bluchatkmp.composeapp.generated.resources.ic_facebook
 import bluchatkmp.composeapp.generated.resources.ic_more
+import bluchatkmp.composeapp.generated.resources.ic_notification
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.presentation.chatlist.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.chatlist.component.ChatAppFAB
@@ -44,6 +46,7 @@ import com.bekircaglar.bluchat.presentation.chatlist.component.ShimmerItem
 import com.bekircaglar.bluchat.presentation.component.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.utils.QueryState
 import com.bekircaglar.bluchat.utils.UiState
+import com.bekircaglar.bluchat.utils.isLoading
 import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -77,7 +80,6 @@ fun ChatListScreen(
 
     val viewModel: ChatListViewModel = koinViewModel()
 
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
     var isSearchActive by remember { mutableStateOf(false) }
     var addChatActive by remember { mutableStateOf(false) }
@@ -87,6 +89,7 @@ fun ChatListScreen(
     var searchText by remember { mutableStateOf("") }
     var groupMembers by remember { mutableStateOf(emptyList<String>()) }
 
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -119,7 +122,11 @@ fun ChatListScreen(
                         modifier = Modifier.padding(end = 16.dp)
                     )
                 }
-                IconButton(onClick = { isSearchActive = !isSearchActive }) {
+                IconButton(onClick = {
+                    isSearchActive = !isSearchActive
+                    viewModel.setLoadState()
+                }
+                ) {
                     Icon(
                         Icons.Default.Search, contentDescription = "Search",
                         tint = MaterialTheme.colorScheme.primary,
@@ -129,7 +136,7 @@ fun ChatListScreen(
                     viewModel.signOut()
                 }) {
                     Icon(
-                        painter = painterResource(resource = Res.drawable.ic_facebook),
+                        painter = painterResource(resource = Res.drawable.ic_notification),
                         contentDescription = "Notifications",
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -140,8 +147,12 @@ fun ChatListScreen(
         bottomBar = { ChatAppBottomAppBar(navController = navController) }
     ) { contentPadding ->
 
-        when (uiState.value) {
-            is QueryState.Success -> {
+        if (!uiState.value.isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
 //                if (selectGroupUserDialog) {
 //                    SelectGroupMemberBottomSheet(
 //                        searchResults = searchResults,
@@ -211,29 +222,19 @@ fun ChatListScreen(
                 }
             }
 
-            is QueryState.Loading -> {
-
-//                LoadingIndicator(
-//                    modifier = Modifier.fillMaxSize(),
-//                    color = MaterialTheme.colorScheme.primary,
-//                )
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                ){
-                    repeat(10) {
-                        ShimmerItem()
-                    }
+        }
+        if (uiState.value.isLoading){
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+                    .background(MaterialTheme.colorScheme.background),
+            ){
+                repeat(10) {
+                    ShimmerItem()
                 }
-
             }
-
-            is QueryState.Error -> {
-
-            }
-
-            else -> {}
         }
     }
+
 }

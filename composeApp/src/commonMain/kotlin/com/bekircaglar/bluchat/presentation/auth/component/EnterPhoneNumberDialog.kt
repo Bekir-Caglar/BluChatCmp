@@ -85,30 +85,30 @@ fun EnterPhoneNumberDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     for (i in 0 until maxLength) {
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .border(
-                                    1.dp,
-                                    color = Color.LightGray,
-                                    shape = MaterialTheme.shapes.medium
-                                )
                                 .height(50.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.surface,
-                                    shape = MaterialTheme.shapes.medium
-                                )
+                                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(0.4f), MaterialTheme.shapes.medium)
                                 .clickable {
                                     keyboardController?.show()
                                 }
                                 .padding(4.dp),
-                            contentAlignment = Alignment.Center
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
                             Text(
                                 text = phoneNumber.getOrNull(i)?.toString() ?: "",
                                 style = MaterialTheme.typography.titleMedium,
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.87f)
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(0.4f))
                             )
                         }
                         Spacer(modifier = Modifier.width(4.dp))

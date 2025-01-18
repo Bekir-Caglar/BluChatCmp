@@ -17,7 +17,7 @@ fun ChatAppNavigation(
     onThemeChange: () -> Unit,
 ) {
     val auth : FirebaseAuth = getKoin().get()
-    println("user is " + auth.currentUser)
+
 
     NavHost(
         navController = navController,
