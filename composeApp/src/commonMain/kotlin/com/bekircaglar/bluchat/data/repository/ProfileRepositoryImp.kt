@@ -38,8 +38,21 @@ class ProfileRepositoryImp(
         }
     }
 
-    override suspend fun uploadImage(uri: Uri): Flow<QueryState<Uri>> = flow{
+    override suspend fun uploadImage(uri: Uri): Flow<QueryState<Uri>> = flow {
 
+    }
+
+    override suspend fun updateUser(updatedUser: Users): Flow<QueryState<Unit>> = flow {
+        emit(QueryState.Loading)
+        kotlin.runCatching {
+            updatedUser.uid?.let { userId ->
+                databaseReference.child(USERS).child(userId).setValue(updatedUser)
+            }
+        }.onSuccess {
+            emit(QueryState.Success(Unit))
+        }.onFailure {
+            emit(QueryState.Error(it.message))
+        }
     }
 
 }

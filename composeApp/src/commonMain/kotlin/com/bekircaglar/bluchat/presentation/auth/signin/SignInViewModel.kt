@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.auth.signin
 
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.domain.model.NotificationData
@@ -101,7 +102,8 @@ class SignInViewModel(
                     }
                     if (emailResult.data == false) {
                         _showPhoneNumberDialog.value = true
-                    } else if (emailResult.data == true) {
+                    }
+                    if (emailResult.data == true) {
                         _signInState.value = QueryState.Success(Unit)
                         _uiState.value = QueryState.Success(Unit)
                     }

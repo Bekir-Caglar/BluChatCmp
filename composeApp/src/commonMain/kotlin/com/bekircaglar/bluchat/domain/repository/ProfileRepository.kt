@@ -10,4 +10,6 @@ interface ProfileRepository {
 
     suspend fun uploadImage(uri: Uri) : Flow<QueryState<Uri>>
 
+    suspend fun updateUser(updatedUser: Users) : Flow<QueryState<Unit>>
+
 }

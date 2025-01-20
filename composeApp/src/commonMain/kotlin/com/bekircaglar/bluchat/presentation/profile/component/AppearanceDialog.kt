@@ -34,9 +34,9 @@ import org.jetbrains.compose.resources.painterResource
 fun AppearanceDialog(
     onDismissRequest: () -> Unit,
     onThemeChange: () -> Unit,
-    darkTheme: Boolean
+    isSystemInDarkTheme: Boolean
 ) {
-    var isChecked by remember { mutableStateOf(darkTheme) }
+    var isChecked by remember { mutableStateOf(isSystemInDarkTheme) }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
