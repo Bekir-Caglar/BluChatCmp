@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.presentation.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,90 +35,77 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.bekircaglar.bluchat.AppContext
+import com.bekircaglar.bluchat.domain.model.NotificationData
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
+import com.bekircaglar.bluchat.presentation.component.ToastNotificationComponent
 import com.bekircaglar.bluchat.presentation.profile.component.AccountDialog
 import com.bekircaglar.bluchat.presentation.profile.component.AppearanceDialog
 import com.bekircaglar.bluchat.presentation.profile.component.ProfileMenu
+import com.bekircaglar.bluchat.ui.theme.DarkThemeViewModel
+import com.bekircaglar.bluchat.utils.NotificationType
+import com.bekircaglar.bluchat.utils.ToastNotificationManager
+import com.bekircaglar.bluchat.utils.error
+import com.bekircaglar.bluchat.utils.isError
 import com.bekircaglar.bluchat.utils.isLoading
 import com.bekircaglar.bluchat.utils.isSuccess
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
+fun ProfileScreen(navController: NavController, darkThemeViewModel: DarkThemeViewModel) {
 
     val context = AppContext
     val viewModel: ProfileViewModel = koinViewModel()
 
+    val toastNotificationManager = remember { ToastNotificationManager() }
 
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val profileUserUiState by viewModel.profileUserUiState.collectAsStateWithLifecycle()
+    val updateUserState by viewModel.updateUserState.collectAsStateWithLifecycle()
     val menuItemList by viewModel.menuItemList.collectAsStateWithLifecycle()
     val logOutState by viewModel.logOutState.collectAsStateWithLifecycle()
     val accountDialogState by viewModel.accountDialogState.collectAsStateWithLifecycle()
     val showAppearanceDialog by viewModel.appearanceDialogState.collectAsStateWithLifecycle()
+    val notification by toastNotificationManager.notificationFlow.collectAsStateWithLifecycle()
     val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle()
     val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
     val isImageLoading by viewModel.isImageLoading.collectAsStateWithLifecycle()
 
 
-    LaunchedEffect(logOutState){
+    LaunchedEffect(logOutState) {
         if (logOutState.isSuccess) {
-            navController.navigate(Screens.AuthNav.route){
-                popUpTo(Screens.HomeNav.route){
+            navController.navigate(Screens.AuthNav.route) {
+                popUpTo(Screens.HomeNav.route) {
                     inclusive = true
                 }
             }
         }
     }
 
-
-//    val galleryLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.GetContent()
-//    ) { uri: Uri? ->
-//        uri?.let {
-//            viewModel.onImageSelected(it)
-//        }
-//    }
-//
-//    val permissionLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.RequestPermission()
-//    ) { isGranted ->
-//        if (isGranted) {
-//            galleryLauncher.launch("image/*")
-//        } else {
-//            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-
-
     if (showAppearanceDialog) {
         AppearanceDialog(
             onDismissRequest = { viewModel.onAppearanceDialogDismiss() },
             onThemeChange = {
-                onThemeChange()
+                darkThemeViewModel.toggleDarkTheme()
             },
-            darkTheme = false
+            isSystemInDarkTheme = darkThemeViewModel.darkTheme.value
+
         )
     }
 
     if (accountDialogState) {
-        val currentUser = Users(
-            name = profileUserUiState.name,
-            surname = profileUserUiState.surname,
-            phoneNumber = profileUserUiState.phoneNumber,
-            profileImageUrl = profileUserUiState.profileImageUrl,
-            email = profileUserUiState.email
-        )
         AccountDialog(
             onDismissRequest = {
                 viewModel.onAccountDialogDismiss()
             },
-            onSave = {  },
-            currentUser = currentUser
+            onSave = { updatedUser ->
+                viewModel.updateProfile(updatedUser)
+                viewModel.onAccountDialogDismiss()
+            },
+            currentUser = profileUserUiState
         )
 
     }
@@ -185,7 +173,10 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "+ 90 "+ profileUserUiState.phoneNumber.replace(Regex("(\\d{3})(\\d{3})(\\d{2})(\\d{2})"), "$1 $2 $3 $4"),
+                        text = "+ 90 " + profileUserUiState.phoneNumber?.replace(
+                            Regex("(\\d{3})(\\d{3})(\\d{2})(\\d{2})"),
+                            "$1 $2 $3 $4"
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -208,6 +199,50 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                     })
                 }
             }
+        }
+    }
+    if (uiState.isError) {
+        val error = uiState.error
+        toastNotificationManager.showNotification(
+            notificationData = NotificationData(
+                message = error.toString(),
+                type = NotificationType.Error
+            )
+        )
+    }
+    if (updateUserState.isSuccess) {
+        toastNotificationManager.showNotification(
+            notificationData = NotificationData(
+                message = "Profile updated successfully",
+                type = NotificationType.Success
+            )
+        )
+        viewModel.clearUpdateUserState()
+    }
+    if (updateUserState.isError) {
+        val error = updateUserState.error
+        toastNotificationManager.showNotification(
+            notificationData = NotificationData(
+                message = error.toString(),
+                type = NotificationType.Warning
+            )
+        )
+        viewModel.clearUpdateUserState()
+    }
+
+    ToastNotificationComponent(
+        notification = notification,
+        toastNotificationManager = toastNotificationManager
+    )
+
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
     }
 }

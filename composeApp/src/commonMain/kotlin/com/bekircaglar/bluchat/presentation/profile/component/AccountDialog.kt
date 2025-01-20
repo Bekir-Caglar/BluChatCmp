@@ -39,7 +39,7 @@ import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransforma
 @Composable
 fun AccountDialog(
     onDismissRequest: () -> Unit,
-    onSave: () -> Unit,
+    onSave: (Users) -> Unit,
     currentUser: Users,
 ) {
 
@@ -122,7 +122,14 @@ fun AccountDialog(
                 Column(modifier = Modifier.padding(horizontal = 32.dp)) {
                     AuthButton(
                         onClick = {
-                            onSave()
+                            val updatedUser = Users(
+                                name = name,
+                                surname = surname,
+                                phoneNumber = phoneNumber,
+                                profileImageUrl = currentUser.profileImageUrl,
+                            ).mergeWith(currentUser)
+
+                            onSave(updatedUser)
                         },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.background,

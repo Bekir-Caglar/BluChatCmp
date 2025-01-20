@@ -55,6 +55,7 @@ import com.bekircaglar.bluchat.presentation.component.ToastNotificationDialog
 import com.bekircaglar.bluchat.utils.NotificationType
 import com.bekircaglar.bluchat.utils.data
 import androidx.compose.runtime.*
+import com.bekircaglar.bluchat.presentation.component.ToastNotificationComponent
 import com.bekircaglar.bluchat.utils.QueryState
 import com.bekircaglar.bluchat.utils.ToastNotificationManager
 import com.bekircaglar.bluchat.utils.error
@@ -297,38 +298,10 @@ fun SignInScreen(navController: NavController) {
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        var isVisible by remember { mutableStateOf(notification != null) }
-
-        LaunchedEffect(notification) {
-            if (notification != null) {
-                isVisible = true
-                delay(3000)
-                isVisible = false
-                toastNotificationManager.dismissNotification()
-            }
-        }
-
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-        ) {
-            notification?.let { notificationData ->
-                ToastNotificationDialog(
-                    notificationData = notificationData,
-                    onDismiss = {
-                        isVisible = false
-                        toastNotificationManager.dismissNotification()
-
-                    }
-                )
-            }
-        }
-    }
+    ToastNotificationComponent(
+        notification = notification,
+        toastNotificationManager = toastNotificationManager
+    )
 
     if (uiState.isLoading) {
         Box(

@@ -11,13 +11,16 @@ import bluchatkmp.composeapp.generated.resources.ic_sun
 import coil3.Uri
 import com.bekircaglar.bluchat.domain.model.ProfileTabItem
 import com.bekircaglar.bluchat.domain.model.ProfileUserUiState
+import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CheckIsUserAlreadyExistUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetCurrentUserUseCase
+import com.bekircaglar.bluchat.domain.usecase.profile.UpdateUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.bekircaglar.bluchat.utils.QueryState
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.UiState
+import com.bekircaglar.bluchat.utils.data
 import com.bekircaglar.bluchat.utils.error
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
@@ -30,13 +33,17 @@ class ProfileViewModel(
     private val authUseCase: AuthUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val uploadImageUseCase: UploadImageUseCase,
-    private val checkIsUserAlreadyExistUseCase: CheckIsUserAlreadyExistUseCase
+    private val checkIsUserAlreadyExistUseCase: CheckIsUserAlreadyExistUseCase,
+    private val updateUserUseCase: UpdateUserUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<QueryState<Unit>>(QueryState.Idle)
     val uiState = _uiState.asStateFlow()
 
-    private val _profileUserUiState = MutableStateFlow(ProfileUserUiState())
+    private val _updateUserState = MutableStateFlow<QueryState<Unit>>(QueryState.Idle)
+    val updateUserState = _updateUserState.asStateFlow()
+
+    private val _profileUserUiState = MutableStateFlow(Users())
     val profileUserUiState = _profileUserUiState.asStateFlow()
 
     private val _menuItemList = MutableStateFlow<List<ProfileTabItem>>(emptyList())
@@ -109,9 +116,78 @@ class ProfileViewModel(
         )
     }
 
+    fun clearUpdateUserState(){
+        _updateUserState.value = QueryState.Idle
+    }
+
+    fun updateProfile(updatedUser: Users) = viewModelScope.launch {
+        _uiState.update{ QueryState.Loading }
+        checkIsUserAlreadyExistUseCase.checkPhoneNumber(updatedUser.phoneNumber.toString())
+            .collect { emailExist ->
+                when (emailExist) {
+                    is QueryState.Success -> {
+                        if (updatedUser == _profileUserUiState.value) {
+                            _uiState.update { QueryState.Success(Unit) }
+                        } else
+                        if (emailExist.data) {
+                            updateUserUseCase(updatedUser.copy(phoneNumber = _profileUserUiState.value.phoneNumber)).collect{
+                                when(it){
+                                    is QueryState.Success -> {
+                                        _uiState.update { QueryState.Success(Unit) }
+                                        if (updatedUser.phoneNumber == _profileUserUiState.value.phoneNumber)
+                                            _updateUserState.update { QueryState.Success(Unit) }
+                                        else
+                                            _updateUserState.update { QueryState.Error("Your information has been updated successfully, except for the phone number. The phone number you entered is already in use by another account.") }
+                                    }
+
+                                    is QueryState.Error -> {
+                                        _uiState.update { QueryState.Error(it.error) }
+
+                                    }
+
+                                    else -> {
+                                        _uiState.update { QueryState.Idle }
+                                    }
+                                }
+                            }
+                        } else {
+                            updateUserUseCase(updatedUser).collect{
+                                when(it){
+                                    is QueryState.Success -> {
+                                        _uiState.update { QueryState.Success(Unit) }
+                                        _updateUserState.update { QueryState.Success(Unit) }
+                                    }
+
+                                    is QueryState.Error -> {
+                                        _uiState.update { QueryState.Error(it.error) }
+                                    }
+
+                                    else -> {
+                                        _uiState.update { QueryState.Idle }
+                                    }
+                                }
+                            }
+                            _uiState.update { QueryState.Success(Unit) }
+                        }
+                    }
+
+                    is QueryState.Error -> {
+                        _uiState.value = QueryState.Error(emailExist.message)
+                    }
+
+                    else -> {
+                        _uiState.value = QueryState.Idle
+                    }
+                }
+            }
+
+
+    }
+
     fun onAccountDialogDismiss() {
         _accountDialogState.value = false
     }
+
     fun onAppearanceDialogDismiss() {
         _appearanceDialogState.value = false
     }
@@ -142,13 +218,7 @@ class ProfileViewModel(
         getCurrentUserUseCase().collect { queryState ->
             when (queryState) {
                 is QueryState.Success -> {
-                    _profileUserUiState.value = ProfileUserUiState().copy(
-                        name = queryState.data.name.toString(),
-                        surname = queryState.data.surname.toString(),
-                        email = queryState.data.email.toString(),
-                        phoneNumber = queryState.data.phoneNumber.toString(),
-                        profileImageUrl = queryState.data.profileImageUrl.toString()
-                    )
+                    _profileUserUiState.update { queryState.data }
                     _uiState.update { QueryState.Success(Unit) }
                 }
 

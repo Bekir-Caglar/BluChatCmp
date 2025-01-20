@@ -8,10 +8,13 @@ import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CheckIsUserAlreadyExistUseCase
 import com.bekircaglar.bluchat.utils.QueryState
 import com.bekircaglar.bluchat.utils.data
+import com.bekircaglar.bluchat.utils.error
+import com.bekircaglar.bluchat.utils.isError
 import com.bekircaglar.bluchat.utils.isSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SignUpViewModel(
@@ -71,7 +74,7 @@ class SignUpViewModel(
                     checkPhoneNumberAndSignUp()
                 }
             } else {
-                _uiState.value = QueryState.Error(emailResult.toString())
+                _uiState.value = QueryState.Error("Error checking email")
             }
         }
     }
@@ -92,10 +95,10 @@ class SignUpViewModel(
         )
         authUseCase.crateUser(user = user).collect { createUserResult ->
             if (createUserResult.isSuccess) {
-                _uiState.value = createUserResult
-                _signUpState.value = createUserResult
+                _uiState.update { createUserResult }
+                _signUpState.update { createUserResult }
             } else {
-                _uiState.value = createUserResult
+                _uiState.update { createUserResult }
             }
         }
     }
@@ -104,18 +107,20 @@ class SignUpViewModel(
 
         val phoneNumber = signUpUIState.value.phoneNumber
 
-        checkIsUserAlreadyExistUseCase.checkPhoneNumber(phoneNumber = phoneNumber).collect { phoneResult ->
-            if (phoneResult.isSuccess) {
-                if (phoneResult.data == true) {
-                    _uiState.value = QueryState.Error("Phone number already exists")
+        checkIsUserAlreadyExistUseCase.checkPhoneNumber(phoneNumber = phoneNumber)
+            .collect { phoneResult ->
+                if (phoneResult.isSuccess) {
+                    if (phoneResult.data == true) {
+                        _uiState.update { QueryState.Error("Phone number already exists") }
+                    }
+                    if (phoneResult.data == false) {
+                        performSignUp()
+                    }
                 }
-                if (phoneResult.data == false) {
-                    performSignUp()
+                if (phoneResult.isError) {
+                    _uiState.update { QueryState.Error("Error checking phone number: " + phoneResult.error) }
                 }
-            } else {
-                _uiState.value = QueryState.Error(phoneResult.toString())
             }
-        }
     }
 
     private fun performSignUp() = viewModelScope.launch {
@@ -123,11 +128,11 @@ class SignUpViewModel(
         val email = signUpUIState.value.email
         val password = signUpUIState.value.password
 
-        authUseCase.signUp(email = email, password =  password).collect { signUpResult ->
+        authUseCase.signUp(email = email, password = password).collect { signUpResult ->
             if (signUpResult.isSuccess) {
                 createUser()
             } else {
-                _uiState.value = signUpResult
+                _uiState.update { signUpResult }
             }
         }
     }

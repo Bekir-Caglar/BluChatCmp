@@ -19,7 +19,9 @@ import dev.gitlive.firebase.database.database
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 class AuthRepositoryImp(
     private val auth: FirebaseAuth,
@@ -83,17 +85,16 @@ class AuthRepositoryImp(
     override suspend fun checkPhoneNumber(phoneNumber: String): Flow<QueryState<Boolean>> = flow {
         emit(QueryState.Loading)
         kotlin.runCatching {
-            databaseReference.child(USERS).orderByValue().equalTo(phoneNumber).valueEvents.collect {
-                val userExists = it.children.any { userSnapshot ->
-                    val user = userSnapshot.value<Users>()
-                    user.phoneNumber.toString() == phoneNumber
-                }
-                if (userExists) {
+            val dbRef = databaseReference.child(USERS).valueEvents.first()
+
+            dbRef.children.forEach {
+                val user = it.value<Users>()
+                if (user.phoneNumber == phoneNumber) {
                     emit(QueryState.Success(true))
-                } else {
-                    emit(QueryState.Success(false))
+                    return@flow
                 }
             }
+            emit(QueryState.Success(false))
 
         }.onFailure {
             emit(QueryState.Error(it.message))
@@ -131,19 +132,20 @@ class AuthRepositoryImp(
     override suspend fun checkIsUserAlreadyExist(email: String): Flow<QueryState<Boolean>> = flow {
         emit(QueryState.Loading)
         kotlin.runCatching {
-            databaseReference.child("Users").valueEvents.collect {
-                val userExists = it.children.any { userSnapshot ->
-                    val user = userSnapshot.value<Users>()
-                    user.email.toString() == email
-                }
-                if (userExists) {
+            val dbRef = databaseReference.child(USERS).valueEvents.first()
+
+            dbRef.children.forEach {
+                val user = it.value<Users>()
+                if (user.email == email) {
                     emit(QueryState.Success(true))
-                } else {
-                    emit(QueryState.Success(false))
+                    return@flow
+
                 }
             }
-        }.onFailure { e ->
-            emit(QueryState.Error(e.message))
+            emit(QueryState.Success(false))
+
+        }.onFailure {
+            emit(QueryState.Error(it.message))
         }
     }
 }

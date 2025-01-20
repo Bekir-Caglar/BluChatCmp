@@ -63,9 +63,11 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
-            implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.composeIcons.featherIcons)
+
+            implementation("com.russhwolf:multiplatform-settings:1.0.0")
+            implementation("com.russhwolf:multiplatform-settings-no-arg:1.0.0")
         }
 
         commonTest.dependencies {
