@@ -44,4 +44,6 @@ sealed class Screens(
     data object AuthNav : Screens("AUTH_NAV_GRAPH")
 
     data object HomeNav : Screens("HOME_NAV_GRAPH")
+
+    data object MessageNav : Screens("MESSAGE_NAV_GRAPH")
 }

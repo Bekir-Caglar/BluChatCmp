@@ -80,108 +80,44 @@ class ProfileViewModel(
 
     init {
         fetchCurrentUser()
-
-        _menuItemList.value = listOf(
-            ProfileTabItem(
-                title = "Account",
-                icon = Res.drawable.ic_account,
-                onClick = {
-                    _accountDialogState.value = true
-                }
-            ),
-            ProfileTabItem(
-                title = "Appearance",
-                icon = Res.drawable.ic_sun,
-                onClick = {
-                    _appearanceDialogState.value = true
-                }
-            ),
-            ProfileTabItem(
-                title = "Privacy",
-                icon = Res.drawable.ic_privacy,
-                onClick = { /*TODO*/ }
-            ),
-            ProfileTabItem(
-                title = "Help",
-                icon = Res.drawable.ic_help,
-                onClick = { /*TODO*/ }
-            ),
-            ProfileTabItem(
-                title = "Logout",
-                icon = Res.drawable.ic_logout,
-                onClick = {
-                    signOut()
-                }
-            )
-        )
     }
 
-    fun clearUpdateUserState(){
+    fun clearUpdateUserState() {
         _updateUserState.value = QueryState.Idle
     }
 
     fun updateProfile(updatedUser: Users) = viewModelScope.launch {
-        _uiState.update{ QueryState.Loading }
+        _uiState.update { QueryState.Loading }
         checkIsUserAlreadyExistUseCase.checkPhoneNumber(updatedUser.phoneNumber.toString())
             .collect { emailExist ->
                 when (emailExist) {
                     is QueryState.Success -> {
                         if (updatedUser == _profileUserUiState.value) {
                             _uiState.update { QueryState.Success(Unit) }
-                        } else
-                        if (emailExist.data) {
-                            updateUserUseCase(updatedUser.copy(phoneNumber = _profileUserUiState.value.phoneNumber)).collect{
-                                when(it){
-                                    is QueryState.Success -> {
-                                        _uiState.update { QueryState.Success(Unit) }
-                                        if (updatedUser.phoneNumber == _profileUserUiState.value.phoneNumber)
-                                            _updateUserState.update { QueryState.Success(Unit) }
-                                        else
-                                            _updateUserState.update { QueryState.Error("Your information has been updated successfully, except for the phone number. The phone number you entered is already in use by another account.") }
-                                    }
-
-                                    is QueryState.Error -> {
-                                        _uiState.update { QueryState.Error(it.error) }
-
-                                    }
-
-                                    else -> {
-                                        _uiState.update { QueryState.Idle }
-                                    }
-                                }
-                            }
                         } else {
-                            updateUserUseCase(updatedUser).collect{
-                                when(it){
+                            val updateUser = if (emailExist.data) updatedUser.copy(phoneNumber = _profileUserUiState.value.phoneNumber) else updatedUser
+                            updateUserUseCase(updateUser).collect {
+                                when (it) {
                                     is QueryState.Success -> {
                                         _uiState.update { QueryState.Success(Unit) }
-                                        _updateUserState.update { QueryState.Success(Unit) }
+                                        _updateUserState.update {
+                                            if (emailExist.data && updatedUser.phoneNumber != _profileUserUiState.value.phoneNumber)
+                                                QueryState.Error("Your information has been updated successfully, except for the phone number. The phone number you entered is already in use by another account.")
+                                            else
+                                                QueryState.Success(Unit)
+                                        }
                                     }
-
-                                    is QueryState.Error -> {
-                                        _uiState.update { QueryState.Error(it.error) }
-                                    }
-
-                                    else -> {
-                                        _uiState.update { QueryState.Idle }
-                                    }
+                                    is QueryState.Error -> _uiState.update { QueryState.Error(it.error) }
+                                    else -> _uiState.update { QueryState.Idle }
                                 }
                             }
-                            _uiState.update { QueryState.Success(Unit) }
                         }
                     }
 
-                    is QueryState.Error -> {
-                        _uiState.value = QueryState.Error(emailExist.message)
-                    }
-
-                    else -> {
-                        _uiState.value = QueryState.Idle
-                    }
+                    is QueryState.Error -> _uiState.value = QueryState.Error(emailExist.message)
+                    else -> _uiState.value = QueryState.Idle
                 }
             }
-
-
     }
 
     fun onAccountDialogDismiss() {
@@ -190,6 +126,14 @@ class ProfileViewModel(
 
     fun onAppearanceDialogDismiss() {
         _appearanceDialogState.value = false
+    }
+
+    fun onAccountDialogShow() {
+        _accountDialogState.value = true
+    }
+
+    fun onAppearanceDialogShow() {
+        _appearanceDialogState.value = true
     }
 
     private fun uploadImage(uri: Uri) = viewModelScope.launch {
@@ -235,7 +179,7 @@ class ProfileViewModel(
     }
 
 
-    private fun signOut() = viewModelScope.launch {
+    fun signOut() = viewModelScope.launch {
         _logOutState.value = QueryState.Loading
         authUseCase.signOut().collect { queryState ->
             when (queryState) {

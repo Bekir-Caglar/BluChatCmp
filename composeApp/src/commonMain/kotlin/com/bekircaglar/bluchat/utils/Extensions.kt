@@ -3,10 +3,8 @@ package com.bekircaglar.bluchat.utils
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -18,7 +16,6 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import coil3.ImageLoader
 import com.bekircaglar.bluchat.presentation.shimmer.PlaceholderHighlight
 import com.bekircaglar.bluchat.presentation.shimmer.placeholder
 import com.bekircaglar.bluchat.presentation.shimmer.shimmer
