@@ -50,6 +50,7 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransformation
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
+import com.bekircaglar.bluchat.presentation.component.ToastNotificationComponent
 import com.bekircaglar.bluchat.presentation.component.ToastNotificationDialog
 import com.bekircaglar.bluchat.utils.NotificationType
 import com.bekircaglar.bluchat.utils.QueryState
@@ -123,10 +124,10 @@ fun SignUpScreen(navController: NavController) {
                 searchIcon = false
             )
         }
-    ) {
+    ) { contentPadding ->
         Column(
             modifier = Modifier
-                .padding(paddingValues = it)
+                .padding(paddingValues = contentPadding)
                 .fillMaxSize()
                 .background(color = MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -291,60 +292,32 @@ fun SignUpScreen(navController: NavController) {
 
             }
         }
-    }
-    LaunchedEffect(uiState) {
-        if (uiState.isError) {
-            toastNotificationManager.showNotification(
-                notificationData = NotificationData(
-                    message = uiState.error.toString(),
-                    type = NotificationType.Error
-                )
-            )
-        }
-    }
-
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        var isVisible by remember { mutableStateOf(notification != null) }
-
-        LaunchedEffect(notification) {
-            if (notification != null) {
-                isVisible = true
-                delay(3000)
-                isVisible = false
-            }
-        }
-
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-        ) {
-            notification?.let { notificationData ->
-                ToastNotificationDialog(
-                    notificationData = notificationData,
-                    onDismiss = {
-                        isVisible = false
-                    }
+        LaunchedEffect(uiState) {
+            if (uiState.isError) {
+                toastNotificationManager.showNotification(
+                    notificationData = NotificationData(
+                        message = uiState.error.toString(),
+                        type = NotificationType.Error
+                    )
                 )
             }
-            if (!isVisible){
-                toastNotificationManager.dismissNotification()
-            }
         }
-    }
 
-    if (uiState.isLoading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        ToastNotificationComponent(
+            notification = notification,
+            toastNotificationManager = toastNotificationManager,
+            topPadding = contentPadding.calculateTopPadding() - 10.dp
+        )
+
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }

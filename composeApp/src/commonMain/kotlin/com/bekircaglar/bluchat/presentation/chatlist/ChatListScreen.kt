@@ -6,10 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,20 +33,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import bluchatkmp.composeapp.generated.resources.Res
-import bluchatkmp.composeapp.generated.resources.ic_facebook
-import bluchatkmp.composeapp.generated.resources.ic_more
 import bluchatkmp.composeapp.generated.resources.ic_notification
-import com.bekircaglar.bluchat.domain.model.Chats
+import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.chatlist.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.chatlist.component.ChatAppFAB
 import com.bekircaglar.bluchat.presentation.chatlist.component.ChatElement
+import com.bekircaglar.bluchat.presentation.chatlist.component.NewChatBottomSheet
 import com.bekircaglar.bluchat.presentation.chatlist.component.SearchTextField
 import com.bekircaglar.bluchat.presentation.chatlist.component.ShimmerItem
 import com.bekircaglar.bluchat.presentation.component.ChatAppBottomAppBar
-import com.bekircaglar.bluchat.utils.QueryState
-import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.utils.isLoading
-import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -57,29 +52,14 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ChatListScreen(
     navController: NavController,
 ) {
-    val dummyChats = listOf(
-        Chats(
-            imageUrl = "https://randomuser.me/api/portraits/men/1.jpg",
-            name = "John",
-            surname = "Doe",
-            lastMessage = "Hello",
-            messageTime = Clock.System.now().toEpochMilliseconds(),
-            isOnline = true,
-            lastMessageSenderId = "1"
-        ),
-        Chats(
-            imageUrl = "https://randomuser.me/api/portraits/men/2.jpg",
-            name = "Jane",
-            surname = "Doe",
-            lastMessage = "Hi",
-            messageTime = Clock.System.now().toEpochMilliseconds(),
-            isOnline = false,
-            lastMessageSenderId = "2"
-        ),
-    )
 
     val viewModel: ChatListViewModel = koinViewModel()
 
+    val currentUserId = viewModel.currentUserId
+    val chatList by viewModel.chatList.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val textFieldValue by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val chatRoomId by viewModel.chatRoomId.collectAsStateWithLifecycle()
 
     var isSearchActive by remember { mutableStateOf(false) }
     var addChatActive by remember { mutableStateOf(false) }
@@ -89,7 +69,14 @@ fun ChatListScreen(
     var searchText by remember { mutableStateOf("") }
     var groupMembers by remember { mutableStateOf(emptyList<String>()) }
 
+
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+
+    LaunchedEffect(chatRoomId) {
+        if (chatRoomId != null)
+            navController.navigate(Screens.MessageScreen.createRoute(chatId = chatRoomId!!))
+    }
 
     Scaffold(
         topBar = {
@@ -124,7 +111,6 @@ fun ChatListScreen(
                 }
                 IconButton(onClick = {
                     isSearchActive = !isSearchActive
-                    viewModel.setLoadState()
                 }
                 ) {
                     Icon(
@@ -133,7 +119,6 @@ fun ChatListScreen(
                     )
                 }
                 IconButton(onClick = {
-                    viewModel.signOut()
                 }) {
                     Icon(
                         painter = painterResource(resource = Res.drawable.ic_notification),
@@ -143,7 +128,11 @@ fun ChatListScreen(
                 }
             })
         },
-        floatingActionButton = { ChatAppFAB(onClick = { isBottomSheetVisible = !isBottomSheetVisible }) },
+        floatingActionButton = {
+            ChatAppFAB(onClick = {
+                isBottomSheetVisible = !isBottomSheetVisible
+            })
+        },
         bottomBar = { ChatAppBottomAppBar(navController = navController) }
     ) { contentPadding ->
 
@@ -169,19 +158,19 @@ fun ChatListScreen(
 //                    )
 //                }
 
-//                if (addChatActive) {
-//                    OpenChatBottomSheet(searchResults = searchResults,
-//                        textFieldValue = textFieldValue,
-//                        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-//                        onDismiss = {
-//                            addChatActive = false
-//                        },
-//                        navController = navController,
-//                        onItemClick = {
-//                            viewModel.createChatRoom(it.uid, navController)
-//                            addChatActive = false
-//                        })
-//                }
+                if (addChatActive) {
+                    NewChatBottomSheet(
+                        searchResults = searchResults,
+                        textFieldValue = textFieldValue,
+                        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                        onDismiss = {
+                            addChatActive = false
+                        },
+                        onItemClick = { selectedUser ->
+                            viewModel.createChatRoom(selectedUser.uid ?: "")
+                            addChatActive = false
+                        })
+                }
 
                 if (isBottomSheetVisible) {
                     BottomSheet(onDismiss = { isBottomSheetVisible = false }, onClicked = {
@@ -208,14 +197,13 @@ fun ChatListScreen(
                 LazyColumn(
                     contentPadding = contentPadding,
                 ) {
-                    items(dummyChats.sortedByDescending { it.messageTime }) { chat ->
+                    items(chatList.sortedByDescending { it.lastMessage?.timestamp }) { chat ->
                         ChatElement(
-                            chat = chat,
+                            chats = chat,
                             onClick = {
+                                navController.navigate(Screens.MessageScreen.createRoute(chatId = chat.chatRoomId))
                             },
-                            onImageLoaded = {},
-                            currentUserId = "1",
-                            messageType = "",
+                            currentUserId = currentUserId,
                             isSelected = false,
                         )
                     }
@@ -223,13 +211,13 @@ fun ChatListScreen(
             }
 
         }
-        if (uiState.value.isLoading){
+        if (uiState.value.isLoading) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
                     .background(MaterialTheme.colorScheme.background),
-            ){
+            ) {
                 repeat(10) {
                     ShimmerItem()
                 }

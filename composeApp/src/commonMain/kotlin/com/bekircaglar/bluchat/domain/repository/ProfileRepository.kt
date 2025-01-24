@@ -12,4 +12,9 @@ interface ProfileRepository {
 
     suspend fun updateUser(updatedUser: Users) : Flow<QueryState<Unit>>
 
+    suspend fun getUserById(userId: String): Flow<QueryState<Users>>
+
+    suspend fun getUsersByListOfIds(userIds: List<String?>): Flow<QueryState<List<Users>>>
+
+
 }

@@ -120,6 +120,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.animation.core.android)
     debugImplementation(compose.uiTooling)
 }
 

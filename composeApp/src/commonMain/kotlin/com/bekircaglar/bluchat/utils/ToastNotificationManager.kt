@@ -17,6 +17,8 @@ class ToastNotificationManager {
     fun showNotification(notificationData: NotificationData) {
         _notificationFlow.value = notificationData
     }
+
+
     fun dismissNotification() {
         _notificationFlow.value = null
     }

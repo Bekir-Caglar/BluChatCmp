@@ -3,25 +3,13 @@ package com.bekircaglar.bluchat.data.repository
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.AuthRepository
 import com.bekircaglar.bluchat.utils.QueryState
-import com.bekircaglar.bluchat.utils.Response
-import com.bekircaglar.bluchat.utils.USERS
-import com.mmk.kmpauth.google.GoogleAuthCredentials
-import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.auth.AuthCredential
+import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import dev.gitlive.firebase.auth.AuthResult
 import dev.gitlive.firebase.auth.FirebaseAuth
-import dev.gitlive.firebase.auth.auth
-import dev.gitlive.firebase.database.ChildEvent
-import dev.gitlive.firebase.database.DataSnapshot
 import dev.gitlive.firebase.database.DatabaseReference
-import dev.gitlive.firebase.database.FirebaseDatabase
-import dev.gitlive.firebase.database.database
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 
 class AuthRepositoryImp(
     private val auth: FirebaseAuth,
@@ -85,7 +73,7 @@ class AuthRepositoryImp(
     override suspend fun checkPhoneNumber(phoneNumber: String): Flow<QueryState<Boolean>> = flow {
         emit(QueryState.Loading)
         kotlin.runCatching {
-            val dbRef = databaseReference.child(USERS).valueEvents.first()
+            val dbRef = databaseReference.child(USER_COLLECTION).valueEvents.first()
 
             dbRef.children.forEach {
                 val user = it.value<Users>()
@@ -106,7 +94,7 @@ class AuthRepositoryImp(
         kotlin.runCatching {
             val currentUserUid = auth.currentUser?.uid
             if (currentUserUid != null) {
-                databaseReference.child(USERS).child(currentUserUid)
+                databaseReference.child(USER_COLLECTION).child(currentUserUid)
                     .setValue(users.copy(uid = currentUserUid))
             } else {
                 emit(QueryState.Error("User not found"))
@@ -132,7 +120,7 @@ class AuthRepositoryImp(
     override suspend fun checkIsUserAlreadyExist(email: String): Flow<QueryState<Boolean>> = flow {
         emit(QueryState.Loading)
         kotlin.runCatching {
-            val dbRef = databaseReference.child(USERS).valueEvents.first()
+            val dbRef = databaseReference.child(USER_COLLECTION).valueEvents.first()
 
             dbRef.children.forEach {
                 val user = it.value<Users>()

@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -139,10 +140,10 @@ fun SignInScreen(navController: NavController) {
                 searchIcon = false
             )
         },
-    ) {
+    ) { contentPadding ->
         Column(
             modifier = Modifier
-                .padding(paddingValues = it)
+                .padding(paddingValues = contentPadding)
                 .fillMaxSize()
                 .background(color = MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -275,40 +276,40 @@ fun SignInScreen(navController: NavController) {
                 }
             }
         }
-    }
-
-    LaunchedEffect(uiState) {
-        if (uiState.isError) {
-            toastNotificationManager.showNotification(
-                notificationData = NotificationData(
-                    message = uiState.error.toString(),
-                    type = NotificationType.Error
+        LaunchedEffect(uiState) {
+            if (uiState.isError) {
+                toastNotificationManager.showNotification(
+                    notificationData = NotificationData(
+                        message = uiState.error.toString(),
+                        type = NotificationType.Error
+                    )
                 )
-            )
+            }
         }
-    }
-    LaunchedEffect(signInState) {
-        if (signInState.isError) {
-            toastNotificationManager.showNotification(
-                notificationData = NotificationData(
-                    message = signInState.error.toString(),
-                    type = NotificationType.Error
+        LaunchedEffect(signInState) {
+            if (signInState.isError) {
+                toastNotificationManager.showNotification(
+                    notificationData = NotificationData(
+                        message = signInState.error.toString(),
+                        type = NotificationType.Error
+                    )
                 )
-            )
+            }
         }
-    }
 
-    ToastNotificationComponent(
-        notification = notification,
-        toastNotificationManager = toastNotificationManager
-    )
+        ToastNotificationComponent(
+            notification = notification,
+            toastNotificationManager = toastNotificationManager,
+            topPadding = contentPadding.calculateTopPadding() - 10.dp
+        )
 
-    if (uiState.isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
     }
 }
